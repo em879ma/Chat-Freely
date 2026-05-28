@@ -1,0 +1,38 @@
+# Chat Freely — Docker Compose
+#
+# Quick start:
+#   1. Copy .env.example to .env and fill in your LiveKit credentials
+#   2. docker compose up -d --build
+#   3. Open http://<server-ip> in your browser
+#
+# For HTTPS, put a reverse proxy (Caddy / Cloudflare Tunnel / nginx + certbot)
+# in front of port 80.
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: web
+      args:
+        VITE_SIGNALING_URL: /api
+    ports:
+      - "80:80"
+    depends_on:
+      - signaling
+    restart: unless-stopped
+
+  signaling:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: signaling
+    environment:
+      - LIVEKIT_URL=${LIVEKIT_URL}
+      - LIVEKIT_API_KEY=${LIVEKIT_API_KEY}
+      - LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET}
+      - SIGNALING_PORT=8787
+      - CORS_ORIGIN=*
+    expose:
+      - "8787"
+    restart: unless-stopped
